@@ -1,0 +1,20 @@
+FROM golang:1.9.0-windowsservercore
+
+SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+
+COPY . /work/go/src/github.com/gliderlabs/registrator
+
+# The idea was taken from https://github.com/spring2/registrator/blob/efbda5c71ba1477cc8c5c2f0d74c02387a4994f7/Dockerfile.buildwin
+# TODO: add `rm /work -Force -Recurse;` after building
+# TODO: Split build file and image for runing so we will able to
+RUN $env:GOPATH='c:\work\go'; \
+	cd c:/work/go/src/github.com/gliderlabs/registrator; \
+	git --version --build-options; \
+	go get; go get; go get; \
+	go build -ldflags '-X main.Version=v7' -o c:/registrator.exe; \
+	cd c:/; \
+	& C:/registrator.exe --version;
+
+WORKDIR C:/
+
+ENTRYPOINT ["c:/registrator.exe"]
